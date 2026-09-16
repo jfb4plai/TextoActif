@@ -48,4 +48,30 @@ describe('partDechiffrable', () => {
     expect(resultat.couverture.manulemme).toBe(1)
     expect(resultat.couverture.approx).toBe(0)
   })
+
+  it('sépare l\'élision "l\'" du reste du mot au lieu de le fusionner en un mot introuvable', () => {
+    // "l'école" fusionné donnerait "lecole", absent de toute base → approximatif.
+    // Séparé, "école" est retrouvé précisément dans ManuLemme (é,c,o,l,e), et
+    // le "l" élidé est compté comme son propre graphème (rang 7, code l).
+    const resultat = partDechiffrable("l'école", [7], [])
+    expect(resultat.couverture.manulemme).toBe(1)
+    expect(resultat.couverture.approx).toBe(0)
+    // 6 graphèmes au total (l élidé + é,c,o,l,e) ; seuls les deux "l" (rang 7)
+    // sont connus → 2/6 arrondi à 33%.
+    expect(resultat.pourcentage).toBe(33)
+  })
+
+  it('reconnaît l\'élision avec apostrophe typographique (’) en plus de l\'apostrophe droite', () => {
+    const resultat = partDechiffrable('l’école', [7], [])
+    expect(resultat.couverture.manulemme).toBe(1)
+    expect(resultat.couverture.approx).toBe(0)
+  })
+
+  it('crédite le graphème élidé "c\'" (= "ce", code s) séparément du reste du mot', () => {
+    // "c'est" fusionné donnerait "cest" (introuvable). Séparé : "c'" = grapheme
+    // c/code s (rang 30) + "est" retrouvé dans ManuLemme (e,s,t).
+    const resultat = partDechiffrable("c'est", [30], [])
+    expect(resultat.couverture.manulemme).toBe(1)
+    expect(resultat.couverture.approx).toBe(0)
+  })
 })

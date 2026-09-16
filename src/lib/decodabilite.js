@@ -47,6 +47,27 @@ export function segmenterApprox(motNettoye) {
   return graphemes
 }
 
+// Élisions ("l'école", "c'est", "j'apprends"...) : l'apostrophe relie une
+// forme pleine tronquée (le/la, ce, je, de, me, ne, se, te, que) au mot
+// suivant. Sans les séparer, le mot fusionné ("lecole", "cest") n'existe dans
+// aucune base et retombe en segmentation approximative, alors que les deux
+// parties séparées sont réellement connues. Le graphème/code attribué à la
+// partie élidée est lu depuis ManuLemme lui-même (première lettre de la
+// forme pleine correspondante), pas inventé à la main.
+const FORME_PLEINE_ELISION = { l: 'le', c: 'ce', j: 'je', d: 'de', m: 'me', n: 'ne', s: 'se', t: 'te', qu: 'que' }
+
+function detecterElision(motBrut) {
+  const match = motBrut.toLowerCase().match(/^(qu|[lcjdmnst])['’]/)
+  if (!match) return null
+  const formePleine = chercherMot(FORME_PLEINE_ELISION[match[1]])
+  if (!formePleine) return null
+  return {
+    grapheme: formePleine.graphemes[0],
+    code: formePleine.codes[0],
+    reste: motBrut.slice(match[0].length),
+  }
+}
+
 export function partDechiffrable(texte, rangsConnus, motsConnus = []) {
   const mots = texte.trim().split(/\s+/).filter(Boolean)
   if (mots.length === 0) return null
@@ -68,11 +89,30 @@ export function partDechiffrable(texte, rangsConnus, motsConnus = []) {
       continue
     }
 
-    let entree = chercherMot(motNettoye)
+    let motPartiellementInconnu = false
+
+    // Partie élidée éventuelle ("l'", "c'"...), comptée séparément du reste du mot.
+    const elision = detecterElision(motBrut)
+    const resteApresElision = elision ? nettoyerMot(elision.reste) : null
+    const aUneElisionExploitable = Boolean(elision && resteApresElision)
+
+    if (aUneElisionExploitable) {
+      totalGraphemes += 1
+      const correspondance = correspondanceParGraphemeEtCode(elision.grapheme, elision.code)
+      if (correspondance && rangsConnus.includes(correspondance.rang)) {
+        graphemesConnus += 1
+      } else {
+        motPartiellementInconnu = true
+      }
+    }
+
+    const netAEvaluer = aUneElisionExploitable ? resteApresElision : motNettoye
+
+    let entree = chercherMot(netAEvaluer)
     if (entree) {
       couverture.manulemme++
     } else {
-      const candidat = formesCandidates(motNettoye).find(c => c !== motNettoye && chercherMot(c))
+      const candidat = formesCandidates(netAEvaluer).find(c => c !== netAEvaluer && chercherMot(c))
       if (candidat) {
         entree = chercherMot(candidat)
         couverture.normalise++
@@ -81,7 +121,6 @@ export function partDechiffrable(texte, rangsConnus, motsConnus = []) {
 
     if (entree) {
       totalGraphemes += entree.graphemes.length
-      let motPartiellementInconnu = false
       entree.graphemes.forEach((grapheme, i) => {
         const correspondance = correspondanceParGraphemeEtCode(grapheme, entree.codes[i])
         if (correspondance && rangsConnus.includes(correspondance.rang)) {
@@ -90,20 +129,19 @@ export function partDechiffrable(texte, rangsConnus, motsConnus = []) {
           motPartiellementInconnu = true
         }
       })
-      if (motPartiellementInconnu) motsNonConformes.push(motBrut)
     } else {
       couverture.approx++
-      const graphemesApprox = segmenterApprox(motNettoye)
+      const graphemesApprox = segmenterApprox(netAEvaluer)
       totalGraphemes += graphemesApprox.length
-      let motPartiellementInconnu = false
       for (const grapheme of graphemesApprox) {
         const connuQuelQueSoitLeCode = toutesLesCorrespondances()
           .some(c => c.variantes.includes(grapheme) && rangsConnus.includes(c.rang))
         if (connuQuelQueSoitLeCode) graphemesConnus++
         else motPartiellementInconnu = true
       }
-      if (motPartiellementInconnu) motsNonConformes.push(motBrut)
     }
+
+    if (motPartiellementInconnu) motsNonConformes.push(motBrut)
   }
 
   if (totalGraphemes === 0) return null
