@@ -1,7 +1,7 @@
 [
   {"rang":1,"grapheme":"r (rr)","variantes":["r","rr"],"ipa":"ʀ","code":"R","frequence":7.86},
   {"rang":2,"grapheme":"a (à, â)","variantes":["a","à","â"],"ipa":"a","code":"a","frequence":6.94},
-  {"rang":3,"grapheme":"e","variantes":["e"],"ipa":null,"code":"#","frequence":6.57},
+  {"rang":3,"grapheme":"e","variantes":["e"],"ipa":"ə","code":"#","frequence":6.57},
   {"rang":4,"grapheme":"i","variantes":["i"],"ipa":"i","code":"i","frequence":6.53},
   {"rang":5,"grapheme":"t (tt)","variantes":["t","tt"],"ipa":"t","code":"t","frequence":6.06},
   {"rang":6,"grapheme":"o (ô)","variantes":["o","ô"],"ipa":"o","code":"o","frequence":5.07},
