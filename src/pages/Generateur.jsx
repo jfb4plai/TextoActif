@@ -10,6 +10,10 @@ const SEUIL = 57
 const MAX_TENTATIVES = 3
 const SEUIL_PROPOSER_AJUSTEMENT = 75
 const NIVEAUX = ['P1', 'P2', 'P3']
+const VARIANTES_FRANCAIS = [
+  { valeur: 'belgique', label: 'Français de Belgique (FWB)' },
+  { valeur: 'france', label: 'Français de France' },
+]
 const LONGUEURS = [
   { valeur: 30, label: 'Court (~30 mots)' },
   { valeur: 60, label: 'Moyen (~60 mots)' },
@@ -26,6 +30,7 @@ export default function Generateur() {
   const { user } = useAuth()
 
   const [niveauCible, setNiveauCible] = useState('P1')
+  const [varianteFrancais, setVarianteFrancais] = useState('belgique')
   const [sujet, setSujet] = useState('')
   const [contexte, setContexte] = useState('')
   const [longueurMots, setLongueurMots] = useState(30)
@@ -125,7 +130,7 @@ export default function Generateur() {
     try {
       for (let tentative = 1; tentative <= MAX_TENTATIVES; tentative++) {
         const response = await apiFetch('/api/generer', {
-          sujet, contexte, longueurMots, correspondances, motsConnus, renforcer: tentative > 1,
+          sujet, contexte, longueurMots, correspondances, motsConnus, varianteFrancais, renforcer: tentative > 1,
         })
         const data = await response.json()
         if (!response.ok) throw new Error(data.error || 'Erreur inattendue')
@@ -151,7 +156,7 @@ export default function Generateur() {
     const motsConnus = parserMotsConnus(motsConnusTexte)
     try {
       const response = await apiFetch('/api/generer', {
-        sujet, contexte, longueurMots, correspondances, motsConnus, allegerVersHautDeGamme: true,
+        sujet, contexte, longueurMots, correspondances, motsConnus, varianteFrancais, allegerVersHautDeGamme: true,
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Erreur inattendue')
@@ -211,6 +216,22 @@ export default function Generateur() {
           lecteur ») et P2 (« lecteur débutant »). En P3 (« lecteur en transition »), le code est en
           principe déjà maîtrisé et l'accent porte sur la fluence — cette app y reste utile pour la
           différenciation, mais ne remplace pas un travail de fluence pour des élèves déjà à niveau.
+        </p>
+      </div>
+
+      <div className="plai-field">
+        <label className="plai-label" htmlFor="variante-francais">Variante de français</label>
+        <select
+          id="variante-francais" name="variante-francais"
+          className="plai-input" value={varianteFrancais} onChange={e => setVarianteFrancais(e.target.value)}
+        >
+          {VARIANTES_FRANCAIS.map(v => <option key={v.valeur} value={v.valeur}>{v.label}</option>)}
+        </select>
+        <p style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '4px' }}>
+          Détermine le vocabulaire employé par l'IA (nombres, repas, matériel scolaire...). Par
+          défaut sur le français de Belgique pour coller au vécu des élèves FWB (nonante, septante,
+          déjeuner/dîner/souper, collation...) — bascule sur le français de France si vous utilisez
+          l'app hors FWB.
         </p>
       </div>
 
