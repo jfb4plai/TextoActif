@@ -339,15 +339,23 @@ export default function Generateur() {
           </label>
           {scoreObtenu < SEUIL && (
             <div className="plai-error" style={{ marginBottom: '0.5rem' }}>
-              Seuil de {SEUIL}% non atteint après {essais.length} essai{essais.length > 1 ? 's' : ''} —
-              le meilleur résultat obtenu est affiché ci-dessous.
+              Seuil de {SEUIL}% non atteint{texteGenere === essais[essais.length - 1]?.texte
+                ? ` après ${essais.length} essai${essais.length > 1 ? 's' : ''} — le meilleur résultat obtenu est affiché ci-dessous`
+                : ' — le texte modifié est repassé sous le seuil visé'}.
             </div>
           )}
           <textarea
             id="texte-genere" name="texte-genere"
             className="plai-input" rows={10}
             value={texteGenere} disabled={saved}
-            onChange={e => setTexteGenere(e.target.value)}
+            onChange={e => {
+              const nouveauTexte = e.target.value
+              setTexteGenere(nouveauTexte)
+              const resultat = partDechiffrable(nouveauTexte, rangsConnus, parserMotsConnus(motsConnusTexte))
+              setScoreObtenu(resultat?.pourcentage ?? null)
+              setCouvertureObtenue(resultat?.couverture ?? null)
+              setMotsNonConformesObtenus(resultat?.motsNonConformes ?? [])
+            }}
           />
           {couvertureObtenue && (
             <p style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '4px' }}>
