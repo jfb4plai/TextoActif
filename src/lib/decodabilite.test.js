@@ -40,4 +40,12 @@ describe('partDechiffrable', () => {
     const resultat = partDechiffrable('zzxyqq', [], [])
     expect(resultat.couverture.approx).toBe(1)
   })
+
+  it('retrouve un mot accentué via ManuLemme plutôt que de tomber en approximatif', () => {
+    // "École" (majuscule + accent) doit être nettoyé en "école", qui existe
+    // tel quel dans ManuLemme — pas de strip d'accent qui le rendrait introuvable.
+    const resultat = partDechiffrable('École', [], [])
+    expect(resultat.couverture.manulemme).toBe(1)
+    expect(resultat.couverture.approx).toBe(0)
+  })
 })

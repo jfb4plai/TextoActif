@@ -2,11 +2,14 @@ import { toutesLesCorrespondances, correspondanceParGraphemeEtCode } from './cgp
 import { chercherMot } from './manulemme'
 import { formesCandidates } from './normalisationMorphologique'
 
+// Ne PAS retirer les accents : les clés ManuLemme et les graphèmes de cgp.json
+// les conservent ("école", "é (rang 8)"...) — les stripper rendrait 28% des
+// entrées ManuLemme introuvables et ferait retomber ces mots courants dans le
+// mode approximatif, le moins fiable.
 function nettoyerMot(mot) {
   return mot
     .toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z]/g, '')
+    .replace(/[^a-zàâçèéêëîïôùûü]/g, '')
 }
 
 function motEstDansLaListe(mot, motsConnus) {
