@@ -20,6 +20,11 @@ const LONGUEURS = [
   { valeur: 100, label: 'Long (~100 mots)' },
 ]
 
+function memesRangs(a, b) {
+  const trierEtJoindre = liste => [...liste].sort((x, y) => x - y).join(',')
+  return trierEtJoindre(a) === trierEtJoindre(b)
+}
+
 function deriverTitre(texte) {
   const premiereLigne = texte.trim().split(/[.!?\n]/)[0].trim()
   const base = premiereLigne || texte.trim()
@@ -36,6 +41,7 @@ export default function Generateur() {
   const [longueurMots, setLongueurMots] = useState(30)
 
   const [rangsConnus, setRangsConnus] = useState([])
+  const [dernierRangsEnregistres, setDernierRangsEnregistres] = useState([])
   const [chargementCorrespondances, setChargementCorrespondances] = useState(true)
   const [enregistrementCorrespondances, setEnregistrementCorrespondances] = useState(false)
   const [correspondancesEnregistrees, setCorrespondancesEnregistrees] = useState(false)
@@ -62,7 +68,10 @@ export default function Generateur() {
         supabase.from('texto_correspondances_connues').select('rangs').eq('user_id', user.id).maybeSingle(),
         supabase.from('texto_mots_connus').select('mots').eq('user_id', user.id).maybeSingle(),
       ])
-      if (correspondancesData?.rangs) setRangsConnus(correspondancesData.rangs)
+      if (correspondancesData?.rangs) {
+        setRangsConnus(correspondancesData.rangs)
+        setDernierRangsEnregistres(correspondancesData.rangs)
+      }
       if (motsData?.mots) {
         const texteInitial = motsData.mots.join('\n')
         setMotsConnusTexte(texteInitial)
@@ -89,6 +98,7 @@ export default function Generateur() {
       .upsert({ user_id: user.id, rangs: rangsConnus, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
     setEnregistrementCorrespondances(false)
     if (err) { setError(err.message); return }
+    setDernierRangsEnregistres(rangsConnus)
     setCorrespondancesEnregistrees(true)
   }
 
@@ -262,12 +272,33 @@ export default function Generateur() {
             </label>
           ))}
         </div>
+        {!chargementCorrespondances && !memesRangs(rangsConnus, dernierRangsEnregistres) && (
+          <p role="status" style={{
+            fontSize: '13px', color: '#9a5b0a', background: '#fef3e2', border: '1px solid #f97316',
+            borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', marginTop: '0.5rem',
+          }}>
+            Modifications non enregistrées — cliquez sur « Enregistrer ces correspondances »
+            ci-dessous. Tant que ce n'est pas fait, ces cases cochées ne comptent pas encore pour le
+            calcul de décodabilité et seront perdues si vous quittez la page ou vous déconnectez.
+          </p>
+        )}
         <button
-          className="plai-btn-ghost" style={{ marginTop: '0.5rem' }}
+          className={!memesRangs(rangsConnus, dernierRangsEnregistres) ? 'plai-btn' : 'plai-btn-ghost'}
+          style={{
+            marginTop: '0.5rem',
+            ...(!memesRangs(rangsConnus, dernierRangsEnregistres) ? { background: '#f97316' } : {}),
+          }}
           onClick={enregistrerCorrespondances} disabled={enregistrementCorrespondances || chargementCorrespondances}
         >
-          {enregistrementCorrespondances ? 'Enregistrement…' : correspondancesEnregistrees ? 'Liste enregistrée' : 'Enregistrer ces correspondances'}
+          {enregistrementCorrespondances ? 'Enregistrement…' : correspondancesEnregistrees && memesRangs(rangsConnus, dernierRangsEnregistres) ? 'Liste enregistrée' : 'Enregistrer ces correspondances'}
         </button>
+        {!chargementCorrespondances && memesRangs(rangsConnus, dernierRangsEnregistres) && rangsConnus.length > 0 && (
+          <p style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '4px' }}>
+            Ces correspondances servent de référence pour toutes vos prochaines générations tant
+            qu'elles restent enregistrées — pensez à cliquer sur « Enregistrer ces correspondances »
+            après chaque nouvelle séquence de code.
+          </p>
+        )}
       </div>
 
       <div className="plai-field">
