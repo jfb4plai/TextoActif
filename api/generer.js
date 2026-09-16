@@ -31,7 +31,7 @@ RÈGLES D'ÉCRITURE ABSOLUES :
 - Tu écris directement le texte, sans introduction ni commentaire autour.
 - Jamais "Voici", "Bien sûr", ou toute formule de transition.
 - Vise environ ${longueurMots} mots.
-${contexte ? `- Ancre le texte dans ce contexte concret de classe, pour que l'élève puisse le relier à ce qu'il vit : ${contexte}.` : ''}
+${contexte ? `- Contexte temporel/pédagogique de la classe : ${contexte}. Calibre la complexité et le vocabulaire attendus en fonction de ce moment de l'année (un P1 de septembre n'a pas le niveau réel d'un P1 de juin), et ancre le texte dans ce que l'élève vit à ce moment.` : ''}
 - Privilégie des mots composés des sons suivants, déjà enseignés : ${graphemesTexte}.
 - Tu peux aussi utiliser les mots suivants, déjà mémorisés par la classe : ${motsTexte}.
 - Le texte doit rester compréhensible et naturel, jamais une suite de syllabes sans lien.

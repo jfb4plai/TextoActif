@@ -285,16 +285,17 @@ export default function Generateur() {
       </div>
 
       <div className="plai-field">
-        <label className="plai-label" htmlFor="contexte-generation">Contexte / période (facultatif)</label>
+        <label className="plai-label" htmlFor="contexte-generation">Période de l'année / échéance (facultatif)</label>
         <input
           id="contexte-generation" name="contexte-generation"
           className="plai-input" type="text" value={contexte} onChange={e => setContexte(e.target.value)}
-          placeholder="Ex. : la rentrée, l'automne, la fancy-fair de l'école"
+          placeholder="Ex. : rentrée de septembre, fin d'année (juin), préparation à l'épreuve externe"
         />
         <p style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '4px' }}>
-          Ancre le texte dans un moment ou un événement réel de la classe (saison, rentrée,
-          activité en cours) plutôt qu'un sujet hors-sol — les élèves y reconnaissent quelque chose
-          qu'ils vivent, ce qui donne plus de sens à ce qu'ils décodent.
+          Indique le moment de l'année scolaire ou une échéance (épreuve, évaluation) — pas un simple
+          thème. Un P1 de septembre n'a pas le même niveau réel qu'un P1 de juin : cette information
+          aide l'IA à calibrer la complexité et le vocabulaire attendus, en plus d'ancrer le texte dans
+          le vécu de la classe.
         </p>
       </div>
 
