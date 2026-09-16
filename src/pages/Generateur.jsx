@@ -41,6 +41,7 @@ export default function Generateur() {
   const [correspondancesEnregistrees, setCorrespondancesEnregistrees] = useState(false)
 
   const [motsConnusTexte, setMotsConnusTexte] = useState('')
+  const [dernierMotsEnregistres, setDernierMotsEnregistres] = useState('')
   const [chargementMots, setChargementMots] = useState(true)
   const [enregistrementMots, setEnregistrementMots] = useState(false)
   const [motsEnregistres, setMotsEnregistres] = useState(false)
@@ -62,7 +63,11 @@ export default function Generateur() {
         supabase.from('texto_mots_connus').select('mots').eq('user_id', user.id).maybeSingle(),
       ])
       if (correspondancesData?.rangs) setRangsConnus(correspondancesData.rangs)
-      if (motsData?.mots) setMotsConnusTexte(motsData.mots.join('\n'))
+      if (motsData?.mots) {
+        const texteInitial = motsData.mots.join('\n')
+        setMotsConnusTexte(texteInitial)
+        setDernierMotsEnregistres(texteInitial)
+      }
       setChargementCorrespondances(false)
       setChargementMots(false)
     }
@@ -96,7 +101,9 @@ export default function Generateur() {
       .upsert({ user_id: user.id, mots, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
     setEnregistrementMots(false)
     if (err) { setError(err.message); return }
-    setMotsConnusTexte(mots.join('\n'))
+    const texteEnregistre = mots.join('\n')
+    setMotsConnusTexte(texteEnregistre)
+    setDernierMotsEnregistres(texteEnregistre)
     setMotsEnregistres(true)
   }
 
@@ -279,17 +286,35 @@ export default function Generateur() {
           avoir à le décoder. Liste exhaustive et évolutive : à compléter vous-même après chaque
           nouvelle séquence, ce n'est ni une liste officielle ni un catalogue à cocher.
         </p>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+        {!chargementMots && motsConnusTexte !== dernierMotsEnregistres && (
+          <p role="status" style={{
+            fontSize: '13px', color: '#9a5b0a', background: '#fef3e2', border: '1px solid #f97316',
+            borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', marginTop: '0.5rem',
+          }}>
+            Modifications non enregistrées — cliquez sur « Enregistrer cette liste » ci-dessous.
+            Tant que ce n'est pas fait, ces mots ne comptent pas encore pour le calcul de décodabilité
+            et seront perdus si vous quittez la page ou vous déconnectez.
+          </p>
+        )}
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', alignItems: 'center' }}>
           <button className="plai-btn-ghost" onClick={copierListeSuggeree} disabled={chargementMots}>
             Copier la liste suggérée (référentiel FWB)
           </button>
           <button
-            className="plai-btn-ghost"
+            className={motsConnusTexte !== dernierMotsEnregistres ? 'plai-btn' : 'plai-btn-ghost'}
+            style={motsConnusTexte !== dernierMotsEnregistres ? { background: '#f97316' } : undefined}
             onClick={enregistrerMotsConnus} disabled={enregistrementMots || chargementMots}
           >
-            {enregistrementMots ? 'Enregistrement…' : motsEnregistres ? 'Liste enregistrée' : 'Enregistrer cette liste'}
+            {enregistrementMots ? 'Enregistrement…' : motsEnregistres && motsConnusTexte === dernierMotsEnregistres ? 'Liste enregistrée' : 'Enregistrer cette liste'}
           </button>
         </div>
+        {!chargementMots && motsConnusTexte === dernierMotsEnregistres && motsConnusTexte && (
+          <p style={{ fontSize: '13px', color: 'var(--text2)', marginTop: '4px' }}>
+            Cette liste sert de référence pour toutes vos prochaines générations tant qu'elle reste
+            enregistrée — pensez à cliquer sur « Enregistrer cette liste » après chaque ajout, sans
+            quoi les nouveaux mots resteront temporaires.
+          </p>
+        )}
       </div>
 
       <div className="plai-field">
