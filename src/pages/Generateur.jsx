@@ -230,7 +230,7 @@ export default function Generateur() {
                 onChange={() => basculerCorrespondance(c.rang)}
                 disabled={chargementCorrespondances}
               />
-              {c.variantes.join(' / ')} — {c.ipa ?? '?'}
+              {c.variantes.join(' / ')} — {c.ipa === '#' ? 'muet' : c.ipa ?? '?'}
             </label>
           ))}
         </div>
